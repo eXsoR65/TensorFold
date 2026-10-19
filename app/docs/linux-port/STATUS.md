@@ -22,6 +22,12 @@ Not verified: graphical launch on X11/Wayland, a real Mac-server streaming/tool 
 
 `canUseLinuxSandbox()` returns false, so Linux `run_command` keeps the existing fail-closed behavior. The draft bubblewrap backend now builds one parent-first mount plan with a read-only workspace decisive beneath writable temporary roots, and probes the production argv. Still unqualified: git-control confinement for absent, nested and worktree metadata; runtime roots for user-managed toolchains; and live adversarial evidence. Details: [SANDBOX-REVIEW.md](SANDBOX-REVIEW.md).
 
+## Connecting to a Mac engine
+
+See [REMOTE-ENGINE.md](REMOTE-ENGINE.md) for the supported setup: serve with `--host` and an
+`--api-key-file`, verify `/v1/models` from Linux, then add it as a local OpenAI-compatible provider.
+The built-in engine entry stays unavailable on Linux by design.
+
 ## Deliberate scope boundaries
 
 - No inference engine bundled or ported; providers are user-configured HTTP endpoints (remote Mac or self-managed).
