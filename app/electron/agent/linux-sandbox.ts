@@ -29,7 +29,9 @@ export function probeLinuxSandbox(cwd: string, run = spawnSync): boolean {
 }
 
 export function canUseLinuxSandbox(): boolean {
-  if (process.platform !== 'linux') return false
+  // Keep the draft backend fail-closed until mount ordering and git-control confinement are qualified.
+  const qualified = false
+  if (!qualified || process.platform !== 'linux') return false
   const binary = linuxSandboxBinary()
   if (!binary) return false
   if (linuxSandboxAvailable !== undefined) return linuxSandboxAvailable
