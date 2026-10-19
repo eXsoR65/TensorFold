@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { EventEmitter } from 'node:events'
-import { chmod, lstat, mkdir, mkdtemp, rm, stat, symlink } from 'node:fs/promises'
+import { chmod, lstat, mkdir, mkdtemp, realpath, rename, rm, stat, symlink } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import {
@@ -59,17 +59,18 @@ try {
     'cleanup cannot be widened to an arbitrary temporary directory',
   )
 
-  // Inode-reuse filesystems (ext4 recycles freed inodes immediately) can give a same-name
-  // recreated directory the exact dev/ino identity back-to-back, so this replacement case is
-  // only deterministic on macOS, which is also the only platform this smoke harness packages.
-  if (process.platform === 'darwin') {
-    const replaced = await createIsolatedSmokeProfile({ tempDir: testTemp, protectedHomes: ['/Users/example'] })
-    await rm(replaced.root, { recursive: true })
-    await mkdir(replaced.root, { mode: 0o700 })
-    await assert.rejects(() => removeExactSmokeProfile(replaced), /identity or ownership changed/)
-    assert.equal((await stat(replaced.root)).isDirectory(), true, 'an inode-replaced path is left untouched')
-    await rm(replaced.root, { recursive: true })
-  }
+  // Retain the original inode so replacement is deterministic even on inode-reusing filesystems.
+  // Profiles carry realpathed roots, so compare against the canonical temp (/private/var on macOS).
+  const canonicalTemp = await realpath(testTemp)
+  const replaced = await createIsolatedSmokeProfile({ tempDir: testTemp, protectedHomes: ['/Users/example'] })
+  const retained = path.join(canonicalTemp, 'retained-original')
+  assert.equal(path.dirname(replaced.root), canonicalTemp)
+  assert.equal(path.dirname(retained), canonicalTemp)
+  await rename(replaced.root, retained)
+  await mkdir(replaced.root, { mode: 0o700 })
+  await assert.rejects(() => removeExactSmokeProfile(replaced), /identity or ownership changed/)
+  assert.equal((await stat(replaced.root)).isDirectory(), true, 'an inode-replaced path is left untouched')
+  await rm(replaced.root, { recursive: true })
 
   const symlinkReplaced = await createIsolatedSmokeProfile({ tempDir: testTemp, protectedHomes: ['/Users/example'] })
   const victim = path.join(testTemp, 'must-not-delete')
