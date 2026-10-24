@@ -584,4 +584,5 @@ test "GLM pairs from the cached key and value ends are the pairs each key's own 
 
 test {
     _ = @import("tool_parse_visibility_test.zig");
+    _ = @import("tool_lfm_test.zig");
 }

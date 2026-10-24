@@ -106,6 +106,7 @@ fn envelopes(a: Allocator, text: []const u8) Allocator.Error![]Envelope {
 /// ``parse_tool_calls_from_content``: the reply's content and its calls (null when it makes none).
 pub fn parse(a: Allocator, text: []const u8, tools: []const Value, max_calls: ?usize) Allocator.Error!Parsed {
     if (tools.len == 0) return .{ .content = text, .calls = null };
+    if (try @import("tool_lfm.zig").parse(a, text, tools, max_calls)) |p| return .{ .content = p.content, .calls = p.calls, .rejected_envelopes = p.rejected };
     var known: std.StringArrayHashMapUnmanaged([]const u8) = .empty;
     for (tools) |tool| {
         const name = try tool_specs.toolName(a, tool);
